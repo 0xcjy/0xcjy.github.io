@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内存计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 800px;
+            background-color: #f4f4f4; /* 浅灰底色 */
+            color: #333; /* 深灰文字 */
+        }
+        .calculator {
+            width: 800px;
+            background-color: #ffffff; /* 组件背景 */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 浅色阴影 */
+        }
+        h1 {
+            color: #0056b3; /* 主题蓝标题 */
+            text-align: center;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #007bff; /* 浅蓝标签文字 */
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc; /* 浅灰边框 */
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #ffffff; /* 输入框背景 */
+            color: #333; /* 黑色输入文字 */
+            transition: border-color 0.3s; /* 交互效果 */
+        }
+        input:focus, select:focus {
+            border-color: #007bff; /* 聚焦状态 */
+            outline: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd; /* 浅蓝色半透明辅助色 */
+            border-radius: 4px;
+            border: 1px solid #0056b3; /* 边框强调 */
+        }
+        .error {
+            color: #ff0000; /* 红色 */
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>内存在线计算器</h1>
+        <div class="input-group">
+            <label for="count">元素个数:</label>
+            <input type="number" id="count" placeholder="请输入元素个数" min="1" oninput="calculateMemory()">
+            <div id="countError" class="error">请输入有效的正整数</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="dataType">数据类型:</label>
+            <select id="dataType" onchange="calculateMemory()">
+                <option value="1">char (1字节)</option>
+                <option value="1">bool (1字节)</option>
+                <option value="4" selected>int (4字节)</option>
+                <option value="8">long long (8字节)</option>
+                <option value="4">float (4字节)</option>
+                <option value="8">double (8字节)</option>
+            </select>
+        </div>
+        
+        <div id="result" class="result">
+            <h3>计算结果:</h3>
+            <p id="resultText">请输入元素个数和数据类型</p>
+        </div>
+    </div>
+
+    <script>
+        function calculateMemory() {
+            // 获取输入值
+            const countInput = document.getElementById('count');
+            const count = parseInt(countInput.value);
+            const dataType = parseInt(document.getElementById('dataType').value);
+            const resultText = document.getElementById('resultText');
+            const errorDiv = document.getElementById('countError');
+            
+            // 验证输入
+            if (isNaN(count) || count <= 0) {
+                if (countInput.value !== '') {
+                    errorDiv.style.display = 'block';
+                } else {
+                    errorDiv.style.display = 'none';
+                    resultText.textContent = '请输入元素个数和数据类型';
+                }
+                return;
+            } else {
+                errorDiv.style.display = 'none';
+            }
+            
+            // 计算总字节数
+            const totalBytes = count * dataType;
+            
+            // 转换为KiB和MiB
+            const kibibytes = totalBytes / 1024;
+            const mebibytes = kibibytes / 1024;
+            const gibibytes = mebibytes / 1024;
+            
+            // 显示结果
+            let result;
+            if (gibibytes >= 1) {
+                result = `${totalBytes} 字节 ≈ ${gibibytes.toFixed(2)} GiB (${mebibytes.toFixed(2)} MiB, ${kibibytes.toFixed(2)} KiB)`;
+            } else if (mebibytes >= 1) {
+                result = `${totalBytes} 字节 ≈ ${mebibytes.toFixed(2)} MiB (${kibibytes.toFixed(2)} KiB)`;
+            } else if (kibibytes >= 1) {
+                result = `${totalBytes} 字节 ≈ ${kibibytes.toFixed(2)} KiB`;
+            } else {
+                result = `${totalBytes} 字节`;
+            }
+            
+            resultText.textContent = result;
+        }
+    </script>
+</body>
+</html>
