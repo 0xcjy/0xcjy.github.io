@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI提示词生成器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: {
+              100: '#F2F3F5',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+              700: '#1D2129',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .transition-height {
+        transition: max-height 0.3s ease-in-out;
+      }
+      .input-focus {
+        @apply ring-2 ring-primary/30 border-primary;
+      }
+      .error-shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+      }
+      @keyframes shake {
+        10%, 90% { transform: translateX(-1px); }
+        20%, 80% { transform: translateX(2px); }
+        30%, 50%, 70% { transform: translateX(-3px); }
+        40%, 60% { transform: translateX(3px); }
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral-100 font-inter text-neutral-700 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-lightbulb text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-neutral-700">AI提示词生成器</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button id="help-btn" class="p-2 rounded-full hover:bg-neutral-100 transition-colors">
+          <i class="fa-solid fa-question-circle text-neutral-500"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-8">
+
+    <!-- OI调试模式表单 -->
+    <div id="oi-debug-form" class="mb-8">
+      <div class="bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-card-hover">
+        <h2 class="text-lg font-semibold mb-4 flex items-center">
+          <i class="fa-solid fa-file-code text-primary mr-2"></i>
+          OI调试模式
+        </h2>
+        
+        <form id="prompt-form" class="space-y-6">
+          <!-- 题目描述 -->
+          <div class="form-group">
+            <label for="problem-description" class="block text-sm font-medium text-neutral-700 mb-1">
+              题目描述 <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <textarea id="problem-description" name="problem-description" rows="4" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请详细描述题目要求..."></textarea>
+              <div class="absolute right-3 bottom-3 text-xs text-neutral-400">
+                <span id="problem-desc-count">0</span>字
+              </div>
+            </div>
+            <p class="mt-1 text-sm text-red-500 hidden" id="problem-desc-error">请填写题目描述</p>
+          </div>
+          
+          <!-- 用户代码 -->
+          <div class="form-group">
+            <label for="user-code" class="block text-sm font-medium text-neutral-700 mb-1">
+              用户代码 <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute right-3 top-3 flex space-x-2">
+                <button type="button" id="code-expand-btn" class="px-2 py-1 text-xs bg-neutral-100 hover:bg-neutral-200 rounded transition-colors">
+                  <i class="fa-solid fa-expand mr-1"></i>展开
+                </button>
+                <select id="code-language" name="code-language" class="px-2 py-1 text-xs bg-neutral-100 hover:bg-neutral-200 rounded transition-colors">
+                  <option value="cpp14">C++14 (GCC 9) O2</option>
+                  <option value="cpp">C++</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="c">C</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="程序">其他</option>
+                </select>
+              </div>
+              <textarea id="user-code" name="user-code" rows="8" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请粘贴你的代码..."></textarea>
+              <div class="absolute right-3 bottom-3 text-xs text-neutral-400">
+                <span id="code-count">0</span>字
+              </div>
+            </div>
+            <p class="mt-1 text-sm text-red-500 hidden" id="user-code-error">请填写用户代码</p>
+          </div>
+          
+          <!-- 错误类型 -->
+          <div class="form-group">
+            <label for="error-types" class="block text-sm font-medium text-neutral-700 mb-2">
+              错误类型（可多选）
+            </label>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="error-types" value="WA" class="error-type-checkbox">
+                <span>WA</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="error-types" value="RE" class="error-type-checkbox">
+                <span>RE</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="error-types" value="TLE" class="error-type-checkbox">
+                <span>TLE</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="error-types" value="MLE" class="error-type-checkbox">
+                <span>MLE</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="error-types" value="CE" class="error-type-checkbox">
+                <span>CE</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- 错误描述 -->
+          <div class="form-group">
+            <label for="error-description" class="block text-sm font-medium text-neutral-700 mb-1">
+              错误描述
+            </label>
+            <textarea id="error-description" name="error-description" rows="3" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请描述你遇到的错误..."></textarea>
+          </div>
+          
+          <!-- 样例输入输出 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+              <label for="sample-input" class="block text-sm font-medium text-neutral-700 mb-1">
+                样例输入
+              </label>
+              <textarea id="sample-input" name="sample-input" rows="3" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请输入样例输入..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="sample-output" class="block text-sm font-medium text-neutral-700 mb-1">
+                样例输出
+              </label>
+              <textarea id="sample-output" name="sample-output" rows="3" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请输入样例输出..."></textarea>
+            </div>
+          </div>
+          
+          <!-- 错误输出 -->
+          <div class="form-group">
+            <label for="error-output" class="block text-sm font-medium text-neutral-700 mb-1">
+              此程序对于样例输入的错误输出
+            </label>
+            <textarea id="error-output" name="error-output" rows="3" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="请输入程序的错误输出..."></textarea>
+          </div>
+          
+          <!-- 标准解法代码 -->
+          <div class="form-group">
+            <label for="standard-solution" class="block text-sm font-medium text-neutral-700 mb-1">
+              标准解法代码（选填）
+            </label>
+            <div class="relative">
+              <div class="absolute right-3 top-3">
+                <select id="solution-language" name="solution-language" class="px-2 py-1 text-xs bg-neutral-100 hover:bg-neutral-200 rounded transition-colors">
+                  <option value="cpp14">C++14 (GCC 9) O2</option>
+                  <option value="cpp">C++</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="c">C</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="程序">其他</option>
+                </select>
+              </div>
+              <textarea id="standard-solution" name="standard-solution" rows="4" class="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:input-focus transition-all resize-none" placeholder="如果有标准解法代码，可以粘贴在这里..."></textarea>
+            </div>
+          </div>
+          
+          <!-- 提交按钮 -->
+          <div class="flex justify-center pt-2">
+            <button type="submit" id="generate-prompt-btn" class="px-8 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all duration-300 flex items-center">
+              <i class="fa-solid fa-magic-wand-sparkles mr-2"></i>
+              生成提示词
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- 生成的提示词 -->
+    <div id="generated-prompt-container" class="mb-8 opacity-0 max-h-0 overflow-hidden transition-all duration-300">
+      <div class="bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-card-hover">
+        <h2 class="text-lg font-semibold mb-4 flex items-center">
+          <i class="fa-solid fa-comment text-primary mr-2"></i>
+          生成的提示词
+        </h2>
+        
+        <div class="relative mb-4">
+          <div id="generated-prompt" class="p-4 bg-neutral-50 rounded-lg border border-neutral-200 min-h-[150px] whitespace-pre-wrap break-words">
+            <!-- 生成的提示词将显示在这里 -->
+          </div>
+          <button id="copy-prompt-btn" class="absolute right-3 top-3 px-3 py-1 bg-white hover:bg-neutral-100 text-neutral-700 rounded-lg text-sm transition-colors shadow-sm flex items-center">
+            <i class="fa-solid fa-copy mr-1"></i>
+            复制
+          </button>
+        </div>
+        
+        <div class="flex justify-center">
+          <button id="regenerate-btn" class="px-6 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-300 flex items-center">
+            <i class="fa-solid fa-refresh mr-2"></i>
+            重新生成
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 复制成功提示 -->
+    <div id="copy-success-toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 flex items-center">
+      <i class="fa-solid fa-check-circle mr-2 text-green-400"></i>
+      <span>复制成功！</span>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-white border-t border-neutral-200 py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-neutral-500 text-sm">© 2025 AI提示词生成器</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 帮助模态框 -->
+  <div id="help-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-neutral-700">使用帮助</h3>
+          <button id="close-help-modal" class="text-neutral-500 hover:text-neutral-700">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-4 text-neutral-600">
+          <div>
+            <h4 class="font-semibold text-neutral-800 mb-2">如何使用 OI 调试模式？</h4>
+            <p>OI调试模式可以帮助你生成向AI询问代码错误的有效提示词。只需填写以下信息：</p>
+            <ul class="list-disc pl-5 mt-2 space-y-1">
+              <li><span class="font-medium">题目描述</span> - 详细描述你要解决的问题</li>
+              <li><span class="font-medium">用户代码</span> - 粘贴你编写的有问题的代码</li>
+              <li><span class="font-medium">代码语言</span> - 选择你使用的编程语言</li>
+              <li><span class="font-medium">错误类型</span> - 选择你遇到的错误类型（可多选）</li>
+              <li><span class="font-medium">错误描述</span> - 描述你遇到的具体问题</li>
+              <li><span class="font-medium">样例输入/输出</span> - 提供题目中的样例输入和输出</li>
+              <li><span class="font-medium">错误输出</span> - 你的程序对样例输入的错误输出</li>
+              <li><span class="font-medium">标准解法代码</span> - 如果你有标准解法代码，可以提供</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-neutral-800 mb-2">必填项</h4>
+            <p>题目描述和用户代码是必填项，其他项可以选填。</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-neutral-800 mb-2">生成提示词</h4>
+            <p>填写完所有你知道的信息后，点击"生成提示词"按钮，系统将为你生成一段连贯的提示词。</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-neutral-800 mb-2">复制提示词</h4>
+            <p>生成提示词后，点击"复制"按钮，即可将提示词复制到剪贴板，然后粘贴到AI聊天界面中。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      // 字符计数
+      const problemDesc = document.getElementById('problem-description');
+      const problemDescCount = document.getElementById('problem-desc-count');
+      const userCode = document.getElementById('user-code');
+      const codeCount = document.getElementById('code-count');
+      
+      problemDesc.addEventListener('input', function() {
+        problemDescCount.textContent = this.value.length;
+        if (this.value.length > 1000) {
+          problemDescCount.classList.add('text-red-500');
+        } else {
+          problemDescCount.classList.remove('text-red-500');
+        }
+      });
+      
+      userCode.addEventListener('input', function() {
+        codeCount.textContent = this.value.length;
+        if (this.value.length > 5000) {
+          codeCount.classList.add('text-red-500');
+        } else {
+          codeCount.classList.remove('text-red-500');
+        }
+      });
+      
+      // 代码区域展开/折叠
+      const codeExpandBtn = document.getElementById('code-expand-btn');
+      const userCodeContainer = userCode.parentElement;
+      let isCodeExpanded = false;
+      
+      codeExpandBtn.addEventListener('click', function() {
+        if (isCodeExpanded) {
+          userCode.rows = 8;
+          codeExpandBtn.innerHTML = '<i class="fa-solid fa-expand mr-1"></i>展开';
+        } else {
+          userCode.rows = 15;
+          codeExpandBtn.innerHTML = '<i class="fa-solid fa-compress mr-1"></i>收起';
+        }
+        isCodeExpanded = !isCodeExpanded;
+      });
+      
+      // 表单提交
+      const promptForm = document.getElementById('prompt-form');
+      const generatedPromptContainer = document.getElementById('generated-prompt-container');
+      const generatedPrompt = document.getElementById('generated-prompt');
+      const problemDescError = document.getElementById('problem-desc-error');
+      const userCodeError = document.getElementById('user-code-error');
+      
+      promptForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 验证必填字段
+        let isValid = true;
+        
+        if (!problemDesc.value.trim()) {
+          problemDescError.classList.remove('hidden');
+          problemDesc.classList.add('border-red-500');
+          problemDesc.classList.add('error-shake');
+          setTimeout(() => problemDesc.classList.remove('error-shake'), 500);
+          isValid = false;
+        } else {
+          problemDescError.classList.add('hidden');
+          problemDesc.classList.remove('border-red-500');
+        }
+        
+        if (!userCode.value.trim()) {
+          userCodeError.classList.remove('hidden');
+          userCode.classList.add('border-red-500');
+          userCode.classList.add('error-shake');
+          setTimeout(() => userCode.classList.remove('error-shake'), 500);
+          isValid = false;
+        } else {
+          userCodeError.classList.add('hidden');
+          userCode.classList.remove('border-red-500');
+        }
+        
+        if (!isValid) return;
+        
+        // 生成提示词
+        generatePrompt();
+        
+        // 显示生成的提示词区域
+        generatedPromptContainer.style.opacity = '1';
+        generatedPromptContainer.style.maxHeight = '2000px';
+        
+        // 平滑滚动到生成的提示词区域
+        generatedPromptContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      
+      // 生成提示词
+      function generatePrompt() {
+        const problemDesc = document.getElementById('problem-description').value.trim();
+        const userCode = document.getElementById('user-code').value.trim();
+        const codeLanguage = document.getElementById('code-language').value;
+        const errorTypes = Array.from(document.querySelectorAll('input[name="error-types"]:checked'))
+                              .map(checkbox => checkbox.value);
+        const errorDesc = document.getElementById('error-description').value.trim();
+        const sampleInput = document.getElementById('sample-input').value.trim();
+        const sampleOutput = document.getElementById('sample-output').value.trim();
+        const errorOutput = document.getElementById('error-output').value.trim();
+        const standardSolution = document.getElementById('standard-solution').value.trim();
+        const solutionLanguage = document.getElementById('solution-language').value;
+        
+        let prompt = "[OI编程调试请求]\n你好，我在编写代码时遇到了一些问题，请你用简明易懂的语言告诉我错误原因和如何改正。\n";
+        
+        prompt += `这是题目描述：\n${problemDesc}\n`;
+        
+        prompt += `这是我的${getLanguageName(codeLanguage)}代码：\n\`\`\`\n${userCode}\n\`\`\`\n`;
+        
+        if (errorTypes.length > 0) {
+          prompt += `我遇到的错误类型是：${errorTypes.join('、')}。\n`;
+        }
+        
+        if (errorDesc) {
+          prompt += `这是错误描述：\n${errorDesc}\n`;
+        }
+        
+        if (sampleInput || sampleOutput) {
+          prompt += "有一个样例，是这样的：\n";
+          
+          if (sampleInput) {
+            prompt += `输入：\n${sampleInput}\n`;
+          }
+          
+          if (sampleOutput) {
+            prompt += `输出：\n${sampleOutput}\n`;
+          }
+          
+          if (errorOutput) {
+            prompt += `我的程序运行这个样例时，输出却是：\n${errorOutput}\n`;
+          }
+        }
+        
+        if (standardSolution) {
+          prompt += `这是标准解法的${getLanguageName(solutionLanguage)}代码：\n\`\`\`\n${standardSolution}\n\`\`\`\n`;
+          prompt += "请帮我分析我的代码与标准解法的差异，找出我的错误。";
+        } else {
+          prompt += "请帮我分析代码中的错误，并给出修改建议。";
+        }
+        
+        // 显示生成的提示词
+        generatedPrompt.textContent = prompt;
+      }
+      
+      // 获取语言名称
+      function getLanguageName(lang) {
+        const languages = {
+          'python': 'Python',
+          'java': 'Java',
+          'cpp': 'C++',
+          'c': 'C',
+          'cpp14': 'C++14 (GCC 9) O2',
+          'javascript': 'JavaScript'
+        };
+        return languages[lang] || lang;
+      }
+      
+      // 复制提示词
+      const copyPromptBtn = document.getElementById('copy-prompt-btn');
+      const copySuccessToast = document.getElementById('copy-success-toast');
+      
+      copyPromptBtn.addEventListener('click', function() {
+        const textToCopy = generatedPrompt.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(function() {
+          // 显示成功提示
+          copySuccessToast.style.opacity = '1';
+          
+          // 3秒后隐藏提示
+          setTimeout(() => {
+            copySuccessToast.style.opacity = '0';
+          }, 3000);
+        }).catch(function(err) {
+          console.error('复制失败: ', err);
+          alert('复制失败，请手动复制。');
+        });
+      });
+      
+      // 重新生成按钮
+      const regenerateBtn = document.getElementById('regenerate-btn');
+      
+      regenerateBtn.addEventListener('click', function() {
+        // 平滑滚动到表单顶部
+        promptForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // 延迟生成以确保滚动完成
+        setTimeout(() => {
+          generatePrompt();
+        }, 500);
+      });
+      
+      // 帮助模态框
+      const helpBtn = document.getElementById('help-btn');
+      const helpModal = document.getElementById('help-modal');
+      const modalContent = document.getElementById('modal-content');
+      const closeHelpModal = document.getElementById('close-help-modal');
+      
+      helpBtn.addEventListener('click', function() {
+        helpModal.classList.remove('hidden');
+        setTimeout(() => {
+          modalContent.classList.remove('scale-95', 'opacity-0');
+          modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+      });
+      
+      closeHelpModal.addEventListener('click', function() {
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+          helpModal.classList.add('hidden');
+        }, 300);
+      });
+      
+      // 点击模态框外部关闭
+      helpModal.addEventListener('click', function(e) {
+        if (e.target === helpModal) {
+          modalContent.classList.remove('scale-100', 'opacity-100');
+          modalContent.classList.add('scale-95', 'opacity-0');
+          setTimeout(() => {
+            helpModal.classList.add('hidden');
+          }, 300);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+    
