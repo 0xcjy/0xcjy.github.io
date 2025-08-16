@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorVision - 颜色预览器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        neutral: {
+                            100: '#F2F3F5',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C',
+                            500: '#4E5969',
+                            600: '#272E3B',
+                            700: '#1D2129',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'elevation-1': '0 2px 5px rgba(0, 0, 0, 0.08)',
+                        'elevation-2': '0 4px 10px rgba(0, 0, 0, 0.1)',
+                        'elevation-3': '0 8px 30px rgba(0, 0, 0, 0.12)',
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .color-input-focus {
+                @apply ring-2 ring-primary/50 border-primary transition-all duration-200;
+            }
+            .gradient-transition {
+                @apply transition-all duration-500 ease-in-out;
+            }
+            .slider-thumb {
+                @apply appearance-none w-4 h-4 rounded-full bg-primary cursor-pointer shadow-elevation-1;
+            }
+            .slider-track {
+                @apply h-1 rounded-full bg-neutral-200;
+            }
+            .card-hover {
+                @apply hover:shadow-elevation-3 transform hover:-translate-y-1 transition-all duration-300;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-neutral-100 min-h-screen text-neutral-700">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-elevation-1 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-secondary"></div>
+                <h1 class="text-xl md:text-2xl font-bold text-neutral-700">ColorVision</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-12">
+            <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-700 mb-2">高级颜色预览器</h2>
+            <p class="text-neutral-500 max-w-2xl">直观地预览和调整十六进制、RGBA和渐变颜色。实时查看效果，轻松获取代码。</p>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- 左侧控制面板 -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- 颜色类型选择器 -->
+                <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                    <h3 class="text-lg font-semibold mb-4 text-neutral-700">颜色类型</h3>
+                    <div class="flex space-x-3 mb-4">
+                        <button id="solidBtn" class="flex-1 py-2 px-4 rounded-lg bg-primary text-white transition-all">
+                            <i class="fa-solid fa-fill mr-2"></i> 纯色
+                        </button>
+                        <button id="gradientBtn" class="flex-1 py-2 px-4 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-300 transition-all">
+                            <i class="fa-solid fa-object-group mr-2"></i> 渐变
+                        </button>
+                    </div>
+
+                    <!-- 纯色控制 -->
+                    <div id="solidControls">
+                        <!-- 十六进制输入 -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">十六进制</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-neutral-500">
+                                        <i class="fa-solid fa-hashtag"></i>
+                                    </span>
+                                </div>
+                                <input type="text" id="hexInput" placeholder="FFFFFF" 
+                                    class="block w-full pl-10 pr-10 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:color-input-focus"
+                                    value="165DFF">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <div id="hexColorPreview" class="w-5 h-5 rounded border border-neutral-300 bg-primary"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RGB输入 -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-neutral-600 mb-1">RGB / RGBA</label>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div>
+                                    <label class="block text-xs text-neutral-500 mb-1">R</label>
+                                    <input type="range" id="redSlider" min="0" max="255" value="22" 
+                                        class="w-full slider-track focus:outline-none">
+                                    <input type="number" id="redInput" min="0" max="255" value="22" 
+                                        class="w-full text-center py-1 border border-neutral-300 rounded focus:outline-none focus:color-input-focus">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-neutral-500 mb-1">G</label>
+                                    <input type="range" id="greenSlider" min="0" max="255" value="93" 
+                                        class="w-full slider-track focus:outline-none">
+                                    <input type="number" id="greenInput" min="0" max="255" value="93" 
+                                        class="w-full text-center py-1 border border-neutral-300 rounded focus:outline-none focus:color-input-focus">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-neutral-500 mb-1">B</label>
+                                    <input type="range" id="blueSlider" min="0" max="255" value="255" 
+                                        class="w-full slider-track focus:outline-none">
+                                    <input type="number" id="blueInput" min="0" max="255" value="255" 
+                                        class="w-full text-center py-1 border border-neutral-300 rounded focus:outline-none focus:color-input-focus">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-neutral-500 mb-1">A</label>
+                                    <input type="range" id="alphaSlider" min="0" max="100" value="100" 
+                                        class="w-full slider-track focus:outline-none">
+                                    <input type="number" id="alphaInput" min="0" max="100" value="100" 
+                                        class="w-full text-center py-1 border border-neutral-300 rounded focus:outline-none focus:color-input-focus">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 颜色选择器 -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-600 mb-2">颜色选择器</label>
+                            <div class="relative h-40 mb-3 rounded-lg overflow-hidden">
+                                <input type="color" id="colorPicker" value="#165DFF" 
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div id="colorPickerPreview" class="absolute inset-0 bg-primary"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 渐变控制 -->
+                    <div id="gradientControls" class="hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-neutral-600 mb-2">渐变类型</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="linearGradientBtn" class="py-2 rounded-lg bg-primary text-white transition-all">
+                                    <i class="fa-solid fa-arrows-left-right mr-2"></i> 线性
+                                </button>
+                                <button id="radialGradientBtn" class="py-2 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-300 transition-all">
+                                    <i class="fa-solid fa-circle mr-2"></i> 径向
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-neutral-600 mb-2">角度</label>
+                            <div class="relative">
+                                <input type="range" id="gradientAngle" min="0" max="360" value="135" 
+                                    class="w-full slider-track focus:outline-none">
+                                <div class="absolute -top-10 left-0 w-full flex justify-center">
+                                    <div class="bg-white px-2 py-1 rounded shadow-elevation-1 text-xs">
+                                        <span id="angleValue">135°</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-600 mb-1">起始颜色</label>
+                                <div class="relative">
+                                    <input type="text" id="startColorInput" placeholder="FFFFFF" 
+                                        class="block w-full pl-10 pr-10 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:color-input-focus"
+                                        value="165DFF">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-neutral-500">
+                                            <i class="fa-solid fa-hashtag"></i>
+                                        </span>
+                                    </div>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <div id="startColorPreview" class="w-5 h-5 rounded border border-neutral-300 bg-primary"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-600 mb-1">结束颜色</label>
+                                <div class="relative">
+                                    <input type="text" id="endColorInput" placeholder="FFFFFF" 
+                                        class="block w-full pl-10 pr-10 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:color-input-focus"
+                                        value="36CFC9">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-neutral-500">
+                                            <i class="fa-solid fa-hashtag"></i>
+                                        </span>
+                                    </div>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <div id="endColorPreview" class="w-5 h-5 rounded border border-neutral-300 bg-secondary"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预设颜色 -->
+                <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                    <h3 class="text-lg font-semibold mb-4 text-neutral-700">预设颜色</h3>
+                    <div class="grid grid-cols-5 gap-2">
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #FF4D4F;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #FF7A45;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #FFC53D;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #73D13D;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #13C2C2;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #165DFF;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #722ED1;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #EB2F96;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #FFFFFF;"></div>
+                        <div class="color-preset h-10 rounded cursor-pointer hover:scale-105 transition-transform" style="background-color: #000000;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧预览和代码区 -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- 颜色预览 -->
+                <div class="bg-white rounded-xl shadow-elevation-2 overflow-hidden card-hover">
+                    <div id="colorPreview" class="h-64 bg-primary relative gradient-transition">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent pointer-events-none"></div>
+                        <div class="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                            <span id="currentColorInfo">#165DFF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预览元素 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-700">文本示例</h3>
+                        <div id="textExample" class="space-y-3">
+                            <h4 class="text-xl font-bold" style="color: #165DFF;">标题文本</h4>
+                            <p class="text-neutral-700">这是一段普通文本，展示颜色在实际文本中的效果。</p>
+                            <a href="#" class="text-primary hover:underline inline-flex items-center">
+                                链接文本 <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-700">按钮示例</h3>
+                        <div id="buttonExample" class="space-y-3">
+                            <button class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors">
+                                主按钮
+                            </button>
+                            <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-primary/5 transition-colors">
+                                次按钮
+                            </button>
+                            <button class="px-4 py-2 rounded-lg bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition-colors">
+                                中性按钮
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-700">卡片示例</h3>
+                        <div id="cardExample" class="rounded-lg overflow-hidden shadow-elevation-1">
+                            <div class="h-24" style="background-color: #165DFF;"></div>
+                            <div class="p-4">
+                                <h4 class="font-semibold mb-1">卡片标题</h4>
+                                <p class="text-sm text-neutral-500">卡片内容区域，展示颜色在背景中的应用效果。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-700">边框示例</h3>
+                        <div id="borderExample" class="grid grid-cols-3 gap-3">
+                            <div class="h-16 rounded-lg border-2" style="border-color: #165DFF;"></div>
+                            <div class="h-16 rounded-lg border-4" style="border-color: #165DFF;"></div>
+                            <div class="h-16 rounded-lg border-2 border-dashed" style="border-color: #165DFF;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 代码生成区 -->
+                <div class="bg-white rounded-xl shadow-elevation-2 p-6 card-hover">
+                    <h3 class="text-lg font-semibold mb-4 text-neutral-700">代码生成</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <button class="code-format-btn py-2 px-4 rounded-lg bg-primary text-white transition-all" data-format="css">
+                            <i class="fa-brands fa-css3-alt mr-2"></i> CSS
+                        </button>
+                        <button class="code-format-btn py-2 px-4 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-300 transition-all" data-format="sass">
+                            <i class="fa-brands fa-sass mr-2"></i> SASS
+                        </button>
+                        <button class="code-format-btn py-2 px-4 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-300 transition-all" data-format="js">
+                            <i class="fa-brands fa-js mr-2"></i> JavaScript
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <div id="codeDisplay" class="bg-neutral-800 text-white p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                            <pre>.element {
+    background-color: #165DFF;
+}</pre>
+                        </div>
+                        <button id="copyBtn" class="absolute top-2 right-2 bg-neutral-700 hover:bg-neutral-600 text-white px-2 py-1 rounded text-xs transition-colors">
+                            <i class="fa-regular fa-copy mr-1"></i> 复制
+                        </button>
+                    </div>
+                    <div id="copyNotification" class="hidden mt-2 text-sm text-green-600">
+                        <i class="fa-regular fa-check-circle mr-1"></i> 代码已复制到剪贴板
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white shadow-elevation-1 mt-12 py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-lg bg-gradient-to-r from-primary to-secondary"></div>
+                        <span class="font-semibold text-neutral-700">ColorVision</span>
+                    </div>
+                    <p class="text-sm text-neutral-500 mt-1">颜色预览与生成工具</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">
+                        <i class="fa-brands fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">
+                        <i class="fa-brands fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-neutral-200 mt-6 pt-6 text-center text-sm text-neutral-500">
+                &copy; 由 Trae AI 生成，0xcjy 保留所有权利。
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM 元素
+        const solidBtn = document.getElementById('solidBtn');
+        const gradientBtn = document.getElementById('gradientBtn');
+        const solidControls = document.getElementById('solidControls');
+        const gradientControls = document.getElementById('gradientControls');
+        const linearGradientBtn = document.getElementById('linearGradientBtn');
+        const radialGradientBtn = document.getElementById('radialGradientBtn');
+        
+        // 纯色控制元素
+        const hexInput = document.getElementById('hexInput');
+        const hexColorPreview = document.getElementById('hexColorPreview');
+        const redSlider = document.getElementById('redSlider');
+        const greenSlider = document.getElementById('greenSlider');
+        const blueSlider = document.getElementById('blueSlider');
+        const alphaSlider = document.getElementById('alphaSlider');
+        const redInput = document.getElementById('redInput');
+        const greenInput = document.getElementById('greenInput');
+        const blueInput = document.getElementById('blueInput');
+        const alphaInput = document.getElementById('alphaInput');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorPickerPreview = document.getElementById('colorPickerPreview');
+        
+        // 渐变控制元素
+        const gradientAngle = document.getElementById('gradientAngle');
+        const angleValue = document.getElementById('angleValue');
+        const startColorInput = document.getElementById('startColorInput');
+        const endColorInput = document.getElementById('endColorInput');
+        const startColorPreview = document.getElementById('startColorPreview');
+        const endColorPreview = document.getElementById('endColorPreview');
+        
+        // 预览和示例元素
+        const colorPreview = document.getElementById('colorPreview');
+        const currentColorInfo = document.getElementById('currentColorInfo');
+        const textExample = document.getElementById('textExample');
+        const buttonExample = document.getElementById('buttonExample');
+        const cardExample = document.getElementById('cardExample');
+        const borderExample = document.getElementById('borderExample');
+        
+        // 代码生成元素
+        const codeFormatBtns = document.querySelectorAll('.code-format-btn');
+        const codeDisplay = document.getElementById('codeDisplay');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyNotification = document.getElementById('copyNotification');
+        
+        // 预设颜色
+        const colorPresets = document.querySelectorAll('.color-preset');
+        
+        // 状态变量
+        let currentMode = 'solid'; // 'solid' 或 'gradient'
+        let currentGradientType = 'linear'; // 'linear' 或 'radial'
+        let currentFormat = 'css'; // 'css', 'sass', 'js'
+        
+        // 初始化
+        updateColorPreview();
+        updateCodeDisplay();
+
+        // 重置纯色模式下的示例样式
+        function resetSolidExamples() {
+            // 文本示例
+            textExample.querySelector('h4').style.background = 'none';
+            textExample.querySelector('h4').style.webkitBackgroundClip = 'initial';
+            textExample.querySelector('h4').style.webkitTextFillColor = 'initial';
+
+            // 按钮示例
+            buttonExample.querySelector('button:nth-child(1)').style.background = 'none';
+            buttonExample.querySelector('button:nth-child(2)').style.border = '1px solid';
+
+            // 卡片示例 - 新增重置逻辑
+            cardExample.querySelector('div:first-child').style.background = 'none';
+
+            // 边框示例
+            const borderElements = borderExample.querySelectorAll('div');
+            borderElements.forEach(el => {
+                el.style.background = 'none';
+                el.style.borderStyle = 'solid';
+                el.style.borderWidth = '2px';
+            });
+        }
+        // 为颜色选择器和预览框添加点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 纯色模式颜色选择器点击
+            colorPickerPreview.addEventListener('click', () => {
+                colorPicker.click();
+            });
+
+            // 渐变模式起始颜色预览框点击
+            startColorPreview.addEventListener('click', () => {
+                // 创建临时颜色输入
+                const tempColorInput = document.createElement('input');
+                tempColorInput.type = 'color';
+                tempColorInput.value = `#${startColorInput.value}`;
+
+                tempColorInput.addEventListener('input', function() {
+                    startColorInput.value = this.value.substring(1);
+                    updateGradientColors();
+                });
+
+                tempColorInput.click();
+            });
+
+            // 渐变模式结束颜色预览框点击
+            endColorPreview.addEventListener('click', () => {
+                // 创建临时颜色输入
+                const tempColorInput = document.createElement('input');
+                tempColorInput.type = 'color';
+                tempColorInput.value = `#${endColorInput.value}`;
+        
+                tempColorInput.addEventListener('input', function() {
+                    endColorInput.value = this.value.substring(1);
+                    updateGradientColors();
+                });
+
+                tempColorInput.click();
+            });
+        });
+        // 事件监听器 - 模式切换
+        solidBtn.addEventListener('click', () => {
+            currentMode = 'solid';
+            updateModeUI();
+            updateColorPreview(); // 确保更新所有示例
+            updateCodeDisplay();
+
+            // 重置示例样式
+            resetSolidExamples();
+        });
+        
+        gradientBtn.addEventListener('click', () => {
+            currentMode = 'gradient';
+            updateModeUI();
+            updateColorPreview();
+            updateCodeDisplay();
+        });
+        
+        // 事件监听器 - 渐变类型切换
+        linearGradientBtn.addEventListener('click', () => {
+            currentGradientType = 'linear';
+            updateGradientTypeUI();
+            updateColorPreview();
+            updateCodeDisplay();
+        });
+        
+        radialGradientBtn.addEventListener('click', () => {
+            currentGradientType = 'radial';
+            updateGradientTypeUI();
+            updateColorPreview();
+            updateCodeDisplay();
+        });
+        
+        // 事件监听器 - 纯色控制
+        hexInput.addEventListener('input', () => updateFromHex());
+        redSlider.addEventListener('input', () => updateFromRGB());
+        greenSlider.addEventListener('input', () => updateFromRGB());
+        blueSlider.addEventListener('input', () => updateFromRGB());
+        alphaSlider.addEventListener('input', () => updateFromRGB());
+        redInput.addEventListener('change', () => updateFromInputFields());
+        greenInput.addEventListener('change', () => updateFromInputFields());
+        blueInput.addEventListener('change', () => updateFromInputFields());
+        alphaInput.addEventListener('change', () => updateFromInputFields());
+        colorPicker.addEventListener('input', () => updateFromColorPicker());
+        
+        // 事件监听器 - 渐变控制
+        gradientAngle.addEventListener('input', () => {
+            angleValue.textContent = `${gradientAngle.value}°`;
+            updateColorPreview();
+            updateCodeDisplay();
+        });
+        startColorInput.addEventListener('input', () => updateGradientColors());
+        endColorInput.addEventListener('input', () => updateGradientColors());
+        
+        // 事件监听器 - 预设颜色
+        colorPresets.forEach(preset => {
+            preset.addEventListener('click', () => {
+                const color = window.getComputedStyle(preset).backgroundColor;
+                const rgbArray = color.match(/\d+/g).map(Number);
+                
+                if (currentMode === 'solid') {
+                    redSlider.value = rgbArray[0];
+                    greenSlider.value = rgbArray[1];
+                    blueSlider.value = rgbArray[2];
+                    alphaSlider.value = 100;
+                    updateFromRGB();
+                } else {
+                    startColorInput.value = rgbToHex(rgbArray[0], rgbArray[1], rgbArray[2]);
+                    updateGradientColors();
+                }
+            });
+        });
+        
+        // 事件监听器 - 代码格式切换
+        codeFormatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFormat = btn.dataset.format;
+                updateCodeFormatUI();
+                updateCodeDisplay();
+            });
+        });
+        
+        // 事件监听器 - 复制代码
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(codeDisplay.textContent)
+                .then(() => {
+                    copyNotification.classList.remove('hidden');
+                    setTimeout(() => {
+                        copyNotification.classList.add('hidden');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('复制失败: ', err);
+                });
+        });
+        
+        // 更新UI模式
+        function updateModeUI() {
+            if (currentMode === 'solid') {
+                solidBtn.classList.remove('bg-neutral-200', 'text-neutral-600');
+                solidBtn.classList.add('bg-primary', 'text-white');
+                gradientBtn.classList.remove('bg-primary', 'text-white');
+                gradientBtn.classList.add('bg-neutral-200', 'text-neutral-600');
+                solidControls.classList.remove('hidden');
+                gradientControls.classList.add('hidden');
+            } else {
+                gradientBtn.classList.remove('bg-neutral-200', 'text-neutral-600');
+                gradientBtn.classList.add('bg-primary', 'text-white');
+                solidBtn.classList.remove('bg-primary', 'text-white');
+                solidBtn.classList.add('bg-neutral-200', 'text-neutral-600');
+                solidControls.classList.add('hidden');
+                gradientControls.classList.remove('hidden');
+            }
+        }
+        
+        // 更新渐变类型UI
+        function updateGradientTypeUI() {
+            if (currentGradientType === 'linear') {
+                linearGradientBtn.classList.remove('bg-neutral-200', 'text-neutral-600');
+                linearGradientBtn.classList.add('bg-primary', 'text-white');
+                radialGradientBtn.classList.remove('bg-primary', 'text-white');
+                radialGradientBtn.classList.add('bg-neutral-200', 'text-neutral-600');
+            } else {
+                radialGradientBtn.classList.remove('bg-neutral-200', 'text-neutral-600');
+                radialGradientBtn.classList.add('bg-primary', 'text-white');
+                linearGradientBtn.classList.remove('bg-primary', 'text-white');
+                linearGradientBtn.classList.add('bg-neutral-200', 'text-neutral-600');
+            }
+        }
+        
+        // 更新代码格式UI
+        function updateCodeFormatUI() {
+            codeFormatBtns.forEach(btn => {
+                if (btn.dataset.format === currentFormat) {
+                    btn.classList.remove('bg-neutral-200', 'text-neutral-600');
+                    btn.classList.add('bg-primary', 'text-white');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-neutral-200', 'text-neutral-600');
+                }
+            });
+        }
+        
+        // 从十六进制更新
+        function updateFromHex() {
+            let hex = hexInput.value.trim();
+            if (hex.startsWith('#')) hex = hex.substring(1);
+            
+            if (/^[0-9A-Fa-f]{6}$/.test(hex)) {
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                
+                redSlider.value = r;
+                greenSlider.value = g;
+                blueSlider.value = b;
+                redInput.value = r;
+                greenInput.value = g;
+                blueInput.value = b;
+                
+                colorPicker.value = `#${hex}`;
+                
+                updateColorPreview();
+                updateCodeDisplay();
+            }
+        }
+        
+        // 从RGB更新
+        function updateFromRGB() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            const a = parseInt(alphaSlider.value) / 100;
+            
+            redInput.value = r;
+            greenInput.value = g;
+            blueInput.value = b;
+            alphaInput.value = parseInt(alphaSlider.value);
+            
+            hexInput.value = rgbToHex(r, g, b);
+            colorPicker.value = `#${rgbToHex(r, g, b)}`;
+            
+            updateColorPreview();
+            updateCodeDisplay();
+        }
+        
+        // 从输入字段更新
+        function updateFromInputFields() {
+            let r = parseInt(redInput.value);
+            let g = parseInt(greenInput.value);
+            let b = parseInt(blueInput.value);
+            let a = parseInt(alphaInput.value);
+            
+            // 确保数值在有效范围内
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+            a = Math.max(0, Math.min(100, a));
+            
+            redSlider.value = r;
+            greenSlider.value = g;
+            blueSlider.value = b;
+            alphaSlider.value = a;
+            redInput.value = r;
+            greenInput.value = g;
+            blueInput.value = b;
+            alphaInput.value = a;
+            
+            hexInput.value = rgbToHex(r, g, b);
+            colorPicker.value = `#${rgbToHex(r, g, b)}`;
+            
+            updateColorPreview();
+            updateCodeDisplay();
+        }
+        
+        // 从颜色选择器更新
+        function updateFromColorPicker() {
+            const hex = colorPicker.value.substring(1);
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            
+            hexInput.value = hex;
+            redSlider.value = r;
+            greenSlider.value = g;
+            blueSlider.value = b;
+            redInput.value = r;
+            greenInput.value = g;
+            blueInput.value = b;
+            
+            updateColorPreview();
+            updateCodeDisplay();
+        }
+        
+        // 更新渐变颜色
+        function updateGradientColors() {
+            let startHex = startColorInput.value.trim();
+            let endHex = endColorInput.value.trim();
+            
+            if (startHex.startsWith('#')) startHex = startHex.substring(1);
+            if (endHex.startsWith('#')) endHex = endHex.substring(1);
+            
+            if (/^[0-9A-Fa-f]{6}$/.test(startHex)) {
+                startColorPreview.style.backgroundColor = `#${startHex}`;
+            }
+            
+            if (/^[0-9A-Fa-f]{6}$/.test(endHex)) {
+                endColorPreview.style.backgroundColor = `#${endHex}`;
+            }
+            
+            updateColorPreview();
+            updateCodeDisplay();
+        }
+        
+        // 更新颜色预览
+        function updateColorPreview() {
+            if (currentMode === 'solid') {
+                const r = parseInt(redSlider.value);
+                const g = parseInt(greenSlider.value);
+                const b = parseInt(blueSlider.value);
+                const a = parseInt(alphaSlider.value) / 100;
+                const hex = rgbToHex(r, g, b);
+                const rgba = `rgba(${r}, ${g}, ${b}, ${a})`;
+                
+                // 更新预览区域
+                colorPreview.style.background = rgba;
+                hexColorPreview.style.backgroundColor = `#${hex}`;
+                colorPickerPreview.style.backgroundColor = `#${hex}`;
+                currentColorInfo.textContent = a === 1 ? `#${hex}` : rgba;
+                
+                // 更新示例
+                updateSolidExamples(rgba);
+            } else {
+                let startHex = startColorInput.value.trim();
+                let endHex = endColorInput.value.trim();
+                
+                if (startHex.startsWith('#')) startHex = startHex.substring(1);
+                if (endHex.startsWith('#')) endHex = endHex.substring(1);
+                
+                if (!/^[0-9A-Fa-f]{6}$/.test(startHex)) startHex = '165DFF';
+                if (!/^[0-9A-Fa-f]{6}$/.test(endHex)) endHex = '36CFC9';
+                
+                let gradient;
+                if (currentGradientType === 'linear') {
+                    gradient = `linear-gradient(${gradientAngle.value}deg, #${startHex}, #${endHex})`;
+                } else {
+                    gradient = `radial-gradient(#${startHex}, #${endHex})`;
+                }
+                
+                // 更新预览区域
+                colorPreview.style.background = gradient;
+                currentColorInfo.textContent = currentGradientType === 'linear' 
+                    ? `线性渐变 (${gradientAngle.value}°)` 
+                    : '径向渐变';
+                
+                // 更新示例
+                updateGradientExamples(gradient);
+            }
+            if (currentMode === 'solid') {
+                // 隐藏渐变叠加层
+                document.querySelector('#colorPreview > div:first-child').style.display = 'none';
+            } else {
+                // 显示渐变叠加层
+                document.querySelector('#colorPreview > div:first-child').style.display = 'block';
+            }
+        }
+        
+        // 更新纯色示例
+        function updateSolidExamples(color) {
+            // 文本示例
+            textExample.querySelector('h4').style.color = color;
+
+            // 按钮示例
+            buttonExample.querySelector('button:nth-child(1)').style.backgroundColor = color;
+            buttonExample.querySelector('button:nth-child(2)').style.color = color;
+            buttonExample.querySelector('button:nth-child(2)').style.borderColor = color;
+
+            // 卡片示例 - 修改为使用backgroundColor而不是background
+            cardExample.querySelector('div:first-child').style.backgroundColor = color;
+            cardExample.querySelector('div:first-child').style.background = color;
+            cardExample.querySelector('div:first-child').style.color = color;
+
+            // 边框示例
+            const borderElements = borderExample.querySelectorAll('div');
+            borderElements.forEach(el => {
+                el.style.borderColor = color;
+            });
+        }
+        
+        // 修复渐变模式下次按钮和边框示例的问题
+        function updateGradientExamples(gradient) {
+            // 文本示例
+            textExample.querySelector('h4').style.background = gradient;
+            textExample.querySelector('h4').style.webkitBackgroundClip = 'text';
+            textExample.querySelector('h4').style.webkitTextFillColor = 'transparent';
+
+            // 按钮示例
+            buttonExample.querySelector('button:nth-child(1)').style.background = gradient;
+            buttonExample.querySelector('button:nth-child(1)').style.border = 'none';
+    
+            // 修改次按钮的处理方式，使用背景色而不是边框
+            buttonExample.querySelector('button:nth-child(2)').style.background = 'rgba(255, 255, 255, 0.8)';
+            buttonExample.querySelector('button:nth-child(2)').style.color = 'rgba(0, 0, 0, 0.8)';
+            buttonExample.querySelector('button:nth-child(2)').style.border = 'none';
+    
+            // 卡片示例
+            cardExample.querySelector('div:first-child').style.background = gradient;
+    
+            // 边框示例 - 使用背景渐变而不是边框渐变
+            const borderElements = borderExample.querySelectorAll('div');
+            borderElements.forEach(el => {
+                el.style.background = gradient;
+                el.style.border = 'none';
+                el.style.boxShadow = '0 0 0 2px white inset'; // 使用inset shadow模拟边框
+            });
+        }
+        
+        // 更新代码显示
+        function updateCodeDisplay() {
+            if (currentMode === 'solid') {
+                const r = parseInt(redSlider.value);
+                const g = parseInt(greenSlider.value);
+                const b = parseInt(blueSlider.value);
+                const a = parseInt(alphaSlider.value) / 100;
+                const hex = rgbToHex(r, g, b);
+                const rgba = `rgba(${r}, ${g}, ${b}, ${a})`;
+                
+                let code;
+                if (currentFormat === 'css') {
+                    code = a === 1 
+                        ? `.element {\n    background-color: #${hex};\n}` 
+                        : `.element {\n    background-color: ${rgba};\n}`;
+                } else if (currentFormat === 'sass') {
+                    code = a === 1 
+                        ? `$primary-color: #${hex};\n\n.element\n  background-color: $primary-color` 
+                        : `$primary-color: ${rgba};\n\n.element\n  background-color: $primary-color`;
+                } else {
+                    code = a === 1 
+                        ? `const element = document.querySelector('.element');\nelement.style.backgroundColor = '#${hex}';` 
+                        : `const element = document.querySelector('.element');\nelement.style.backgroundColor = '${rgba}';`;
+                }
+                
+                codeDisplay.textContent = code;
+            } else {
+                let startHex = startColorInput.value.trim();
+                let endHex = endColorInput.value.trim();
+                
+                if (startHex.startsWith('#')) startHex = startHex.substring(1);
+                if (endHex.startsWith('#')) endHex = endHex.substring(1);
+                
+                if (!/^[0-9A-Fa-f]{6}$/.test(startHex)) startHex = '165DFF';
+                if (!/^[0-9A-Fa-f]{6}$/.test(endHex)) endHex = '36CFC9';
+                
+                let gradientCSS, gradientJS;
+                if (currentGradientType === 'linear') {
+                    gradientCSS = `linear-gradient(${gradientAngle.value}deg, #${startHex}, #${endHex})`;
+                    gradientJS = `linear-gradient(${gradientAngle.value}deg, rgb(${hexToRgb(startHex)}), rgb(${hexToRgb(endHex)}))`;
+                } else {
+                    gradientCSS = `radial-gradient(#${startHex}, #${endHex})`;
+                    gradientJS = `radial-gradient(rgb(${hexToRgb(startHex)}), rgb(${hexToRgb(endHex)}))`;
+                }
+                
+                let code;
+                if (currentFormat === 'css') {
+                    code = `.element {\n    background: ${gradientCSS};\n}`;
+                } else if (currentFormat === 'sass') {
+                    code = `$gradient: ${gradientCSS};\n\n.element\n  background: $gradient`;
+                } else {
+                    code = `const element = document.querySelector('.element');\nelement.style.background = '${gradientJS}';`;
+                }
+                
+                codeDisplay.textContent = code;
+            }
+        }
+        
+        // 辅助函数 - RGB转十六进制
+        function rgbToHex(r, g, b) {
+            return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+        
+        // 辅助函数 - 十六进制转RGB
+        function hexToRgb(hex) {
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            return `${r}, ${g}, ${b}`;
+        }
+    </script>
+</body>
+</html>

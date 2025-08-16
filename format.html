@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码格式化助手</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #dee5ff, #bdf7ff);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: rgb(44, 62, 80);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .panel-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-body {
+            flex: 1;
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: none;
+            resize: none;
+            font-family: 'fira code','Consolas', 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            background: #f8f9fa;
+            /*border-bottom: 1px solid #eee;*/
+            tab-size: 4;
+        }
+        textarea:focus {
+            outline: none;
+        }
+        
+        .code-display {
+            padding: 15px;
+            height: 400px;
+            overflow: auto;
+            font-family: 'fira code','Consolas', 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            background: #f8f9fa;
+            white-space: pre;
+            border-bottom: 1px solid #eee;
+            tab-size: 4;
+        }
+
+        .span-code {
+            color: #000;
+            font-family: 'fira code','Consolas', 'Courier New', monospace;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 550;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+        }
+        
+        .format-btn {
+            border: 2px solid #25a8ff;
+            color: #1f86ca;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+        }
+        
+        .format-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.6);
+        }
+        
+        .copy-btn {
+            border: 2px solid #2ecc71;
+            color: #26a85c;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4);
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.6);
+        }
+        
+        .reset-btn {
+            border: 2px solid #e74c3c;
+            color: #c0392b;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.6);
+        }
+        
+        .examples {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+        }
+        
+        .examples h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .example-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .example {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .example h3 {
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        
+        .example pre {
+            background: rgb(248, 249, 250);
+            color: #000;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'fira code','Consolas', 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        
+        .features {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .features h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .features ul {
+            padding-left: 20px;
+        }
+        
+        .features li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .highlight {
+            color: #3c80e7;
+            font-weight: bold;
+        }
+        
+        .info-badge {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .panel-container {
+                flex-direction: column;
+            }
+            
+            .example-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>代码格式化助手</h1>
+            <p class="subtitle">一键清除多余空格、注释和空行，让您的代码更加简洁高效</p>
+        </header>
+        
+        <div class="panel-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>输入代码</span>
+                </div>
+                <div class="panel-body">
+                    <textarea id="inputCode" placeholder="在此粘贴您的代码..." autofocus></textarea>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <span>格式化结果</span>
+                </div>
+                <div class="panel-body">
+                    <div id="outputCode" class="code-display">格式化结果将显示在这里...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="btn-container">
+            <button class="format-btn" onclick="formatCode()">
+                <span>格式化代码</span>
+            </button>
+            <button class="copy-btn" onclick="copyToClipboard()">
+                <span>复制结果</span>
+            </button>
+            <button class="reset-btn" onclick="resetCode()">
+                <span>重置</span>
+            </button>
+        </div>
+        
+        <div class="examples">
+            <h2>示例</h2>
+            <div class="example-container">
+                <div class="example">
+                    <h3>格式化前</h3>
+                    <pre>for (int i = 1; i <= n; i ++) 
+{
+    // 输出结果
+    cout << "Hello, world! i = " << i << endl;
+    
+    /* 输出格式：
+       i: 索引值
+    */
+    if (i % 5 == 0) {
+        cout << "Multiple of 5: " << i << endl;
+    }
+}</pre>
+                </div>
+                <div class="example">
+                    <h3>格式化后</h3>
+                    <pre>for(int i=1;i<=n;i++){
+    cout<<"Hello, world! i = "<<<span class="span-code">i</span><<<span class="span-code">endl</span>;
+    if(i%5==0){
+        cout<<"Multiple of 5: "<<<span class="span-code">i</span><<<span class="span-code">endl</span>;
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>格式化功能</h2>
+            <ul>
+                <li>删除所有 <span class="highlight">字母与非下划线符号之间</span> 的空格</li>
+                <li>删除所有 <span class="highlight">非下划线符号之间</span> 的空格</li>
+                <li>删除所有 <span class="highlight">) 与 { 之间</span> 的所有空白（包括换行、空格、制表符）</li>
+                <li>删除所有 <span class="highlight">// 与换行符之间</span> 的内容（单行注释）</li>
+                <li>删除所有 <span class="highlight">/* 与 */ 之间</span> 的内容（多行注释）</li>
+                <li>删除所有 <span class="highlight">空行</span></li>
+                <li>保留代码原有的 <span class="highlight">换行和缩进</span> 结构</li>
+                <li>保护 <span class="highlight">字符串内容</span>（引号内的所有内容不受影响）</li>
+                <li>正确处理 <span class="highlight">转义引号</span>（如 \" 不会被识别为字符串结束）</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 保护字符串内容（包括转义引号）
+        function protectStrings(code) {
+            const stringStore = [];
+            let index = 0;
+            
+            // 正则表达式匹配字符串（包括转义引号）
+            const stringRegex = /(["'])(?:\\.|(?!\1).)*?\1/g;
+            
+            // 用占位符替换所有字符串
+            const protectedCode = code.replace(stringRegex, (match) => {
+                stringStore.push(match);
+                return `__STRING_${index++}__`;
+            });
+            
+            return { protectedCode, stringStore };
+        }
+        
+        // 恢复被保护的字符串
+        function restoreStrings(code, stringStore) {
+            let restoredCode = code;
+            for (let i = 0; i < stringStore.length; i++) {
+                const placeholder = `__STRING_${i}__`;
+                restoredCode = restoredCode.replace(placeholder, stringStore[i]);
+            }
+            return restoredCode;
+        }
+        
+        function formatCode() {
+            const input = document.getElementById('inputCode').value;
+            
+            // 第一步：保护字符串内容
+            const { protectedCode, stringStore } = protectStrings(input);
+            let output = protectedCode;
+            
+            // 删除多行注释（保留换行）
+            output = output.replace(/\/\*[\s\S]*?\*\//g, '');
+            
+            // 删除单行注释（保留换行）
+            output = output.replace(/\/\/[^\n]*/g, '');
+            
+            // 删除 ) 和 { 之间的所有空白（包括换行符）
+            output = output.replace(/\)\s*{/g, '){');
+            
+            // 按行处理，保留换行结构
+            const lines = output.split('\n');
+            const processedLines = [];
+            
+            for (let line of lines) {
+                // 跳过空行（后面会统一处理空行）
+                if (line.trim() === '') {
+                    processedLines.push(line);
+                    continue;
+                }
+                
+                // 删除字母与符号之间的空格
+                // 处理字母后跟符号的情况（如 "i = 1" -> "i=1"）
+                line = line.replace(/(\w)\s+([^\w_\s])/g, '$1$2');
+                
+                // 处理符号后跟字母的情况（如 "= i" -> "=i"）
+                line = line.replace(/([^\w_\s])\s+(\w)/g, '$1$2');
+                
+                // 删除符号与符号之间的空格（如 "i ++" -> "i++"）
+                line = line.replace(/([^\w_\s])\s+([^\w_\s])/g, '$1$2');
+                
+                processedLines.push(line);
+            }
+            
+            // 重新组合代码
+            output = processedLines.join('\n');
+            
+            // 删除空行（整行只有空格或空字符串）
+            output = output.replace(/^\s*[\r\n]/gm, '');
+            
+            // 恢复被保护的字符串
+            output = restoreStrings(output, stringStore);
+            
+            // 更新输出区域
+            document.getElementById('outputCode').textContent = output;
+
+            const formatBtn = document.querySelector('.format-btn');
+            const originalText = formatBtn.innerHTML;
+            formatBtn.innerHTML = '✓ 已完成!';
+            setTimeout(() => {
+                formatBtn.innerHTML = originalText;
+            }, 2000);
+        }
+        
+        function copyToClipboard() {
+            const output = document.getElementById('outputCode');
+            const textArea = document.createElement('textarea');
+            textArea.value = output.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // 显示复制成功提示
+            const copyBtn = document.querySelector('.copy-btn');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✓ 已复制!';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }
+        
+        function resetCode() {
+            document.getElementById('inputCode').value = '';
+            document.getElementById('outputCode').textContent = '格式化结果将显示在这里...';
+        }
+        
+        // 初始加载时格式化示例代码
+        //window.onload = formatCode;
+    </script>
+</body>
+</html>
