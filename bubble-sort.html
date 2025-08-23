@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冒泡排序可视化</title>
+    <link rel="stylesheet" href="bubble-sort-styles.css">
+    <script src="https://d3js.org/d3.v7.min.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>冒泡排序算法可视化</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="array-input">输入数组（用逗号分隔）:</label>
+                <input type="text" id="array-input" placeholder="例如: 5,3,8,4,2">
+                <button id="generate-random">随机生成</button>
+                <button id="apply-array">应用</button>
+            </div>
+        </div>
+        
+        <div class="controls-section">
+            <div class="control-group">
+                <label for="sort-direction">排序方向:</label>
+                <select id="sort-direction">
+                    <option value="ascending">升序</option>
+                    <option value="descending">降序</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="speed-slider">速度:</label>
+                <input type="range" id="speed-slider" min="1" max="10" value="5">
+                <span id="speed-value">5</span>
+            </div>
+            
+            <div class="buttons-group">
+                <button id="start-sort">开始排序</button>
+                <button id="step-sort">单步执行</button>
+                <button id="reset-sort">重置</button>
+            </div>
+        </div>
+        
+        <div class="visualization-container">
+            <div id="chart-area"></div>
+        </div>
+        
+        <div class="status-section">
+            <div id="current-operation">准备就绪</div>
+            <div id="swap-count">交换次数: 0</div>
+        </div>
+    </div>
+    
+    <script src="bubble-sort-script.js"></script>
+</body>
+</html>

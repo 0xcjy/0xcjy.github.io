@@ -1,0 +1,156 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+}
+
+.input-section, .controls-section, .status-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-group, .control-group, .buttons-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+    margin-right: 10px;
+    min-width: 100px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    min-width: 200px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+#speed-slider {
+    flex: 1;
+    max-width: 200px;
+}
+
+.visualization-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: 400px;
+    position: relative;
+}
+
+#chart-area {
+    width: 100%;
+    height: 100%;
+}
+
+.bar {
+    fill: #3498db;
+    transition: fill 0.3s;
+}
+
+.bar.sorted {
+    fill: #2ecc71;
+}
+
+.bar.comparing {
+    fill: #f39c12;
+}
+
+.bar.swapping {
+    fill: #e74c3c;
+}
+
+.status-section {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+}
+
+#current-operation {
+    font-weight: bold;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .input-group, .control-group, .buttons-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    input[type="text"], select, #speed-slider {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .buttons-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .status-section {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .visualization-container {
+        height: 300px;
+    }
+}
