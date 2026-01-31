@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>教程和参考手册合集</title>
+  <style>
+    h1{
+        width:fit-content;
+        margin: 30px auto;
+        font-family: "Microsoft YaHei Light";
+        font-size: 40px;
+    }
+    #main{
+        width: 56%;
+        margin: 10px auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+    .card{
+        width: 220px;
+        height: 110px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+        font-family: "Microsoft YaHei";
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+    .icon-container {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .card-icon {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .letter-icon {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+    }
+    .card:hover{
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        transform: translateY(-3px);
+        transition: all 0.3s ease;
+        color:#006eff;
+    }
+    a{
+        color:black;
+        text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+    <h1>编程语言类教程和参考手册合集</h1>
+    <div id="main">
+    </div>
+    <script>
+        var data=[{
+                "name": "HTML 教程",
+                "url": "https://www.javascriptcn.com/html",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBEI29.png"
+            },{
+                "name": "HTML 参考手册",
+                "url": "https://www.javascriptcn.com/tags"
+            },{
+                "name": "CSS 教程",
+                "url": "https://www.javascriptcn.com/css",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBELVK.png"
+            },{
+                "name": "CSS 参考手册",
+                "url": "https://www.javascriptcn.com/cssref"
+            },{
+                "name": "JavaScript 教程",
+                "url": "https://www.javascriptcn.com/js",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBEOUO.png"
+            },{
+                "name": "TypeScript 教程",
+                "url": "https://www.javascriptcn.com/typescript",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBEx8H.png"
+            },{
+                "name": "Vue.js 互动教程",
+                "url": "https://cn.vuejs.org/tutorial",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBVVPg.png"
+            },{
+                "name": "RegExp 正则表达式",
+                "url": "https://www.javascriptcn.com/regexp"
+            },{
+                "name": "Markdown 教程",
+                "url": "https://www.markdown.xyz/cheat-sheet",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBV0Z6.png"
+            },{
+                "name": "LaTeX 教程",
+                "url": "https://www.latexlive.com/help",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBVDIO.png",
+            },{
+                "name": "C++ 参考手册",
+                "url": "https://cppreference.cn/w/",
+                "icon": "https://s21.ax1x.com/2025/08/18/pVBVxoT.png"
+            },{
+                "name": "C++ 教程",
+                "url": "https://oi-wiki.org/lang",
+                "icon": "https://atts.w3cschool.cn/attachments/image/20240301/1709260068545701.png"
+            },{
+                "name": "OI Wiki",
+                "url": "https://oi-wiki.org/",
+                "icon": "https://oi-wiki.org/favicon.ico"
+            }
+        ];
+        const defultColor = '#009688';
+        const mainContainer = document.getElementById('main');
+        data.forEach(item => {
+            const link = document.createElement('a');
+            link.href = item.url;
+            link.target = '_blank';
+            const card = document.createElement('div');
+            card.className = 'card';
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'icon-container';
+            if (item.icon) {
+                const icon = document.createElement('img');
+                icon.src = item.icon;
+                icon.alt = item.name + "图标";
+                icon.className = 'card-icon';
+                iconContainer.appendChild(icon);
+            } else {
+                const firstLetter = item.name.charAt(0).toUpperCase();
+                const letterIcon = document.createElement('div');
+                letterIcon.className = 'letter-icon';
+                letterIcon.style.backgroundColor = defultColor;
+                letterIcon.textContent = firstLetter;
+                iconContainer.appendChild(letterIcon);
+            }
+            card.appendChild(iconContainer);
+            const text = document.createTextNode(item.name);
+            card.appendChild(text);
+            link.appendChild(card);
+            mainContainer.appendChild(link);
+        });
+    </script>
+</body>
+</html>

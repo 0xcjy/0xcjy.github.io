@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>质数检测工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #afdbff, #d0daff);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            /*border-left: 5px solid #3498db;*/
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover{
+            transform: translateY(-5px);
+        }
+        
+        /*.card.batch {
+            border-left-color: #e74c3c;
+        }*/
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .batch-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .batch-btn:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+        }
+        code{
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'fira code', Courier, monospace;
+            color: #246cda;
+            font-size: 14px;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            /*border-left: 4px solid #3498db;*/
+            display: none;
+        }
+        /*
+        .result.batch-result {
+            border-left-color: #ffffff;
+        }
+        */
+        
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .prime {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .composite {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        #batchNumbers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .number-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .number-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .number-card.prime {
+            background: #d5f5e3;
+            border: 2px solid #2ecc71;
+        }
+        
+        .number-card.composite {
+            background: #fadbd8;
+            border: 2px solid #e74c3c;
+        }
+        
+        .number {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            font-size: 14px;
+        }
+        
+        .info {
+            background-color: #eaf2f8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            /*border-left: 4px solid #3498db;*/
+        }
+        
+        .info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .info p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            margin-top: 30px;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input, button {
+                width: 100%;
+            }
+        }
+        #tutorialArrow{
+            font-size: 16px;
+            margin-left: 12px;
+            user-select: none;
+            color:#81a9ac;
+            font-weight: bold;
+        }
+        #tutorialArrow:hover{
+            color:#246cda;
+        }
+        .num{
+            color:#ff6f2c;
+            font-family: 'fira code', Courier, monospace;
+            font-size:14px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>质数检测工具</h1>
+            <p class="subtitle">使用米勒-拉宾算法高效判断一个数是不是质数</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2>单个数字测试</h2>
+                <div class="input-group">
+                    <input type="text" id="singleNumber" placeholder="输入一个正整数">
+                    <button id="testSingle">测试是否为质数</button>
+                </div>
+                <div id="singleResult" class="result">
+                    <div class="result-title">测试结果：</div>
+                    <div id="singleResultText"></div>
+                </div>
+            </div>
+            
+            <div class="card batch">
+                <h2>批量区间测试</h2>
+                <div class="input-group">
+                    <input type="text" id="startRange" placeholder="起始数字">
+                    <input type="text" id="endRange" placeholder="结束数字">
+                    <input type="text" id="intervalLength" placeholder="区间长度" style="min-width:120px;" title="区间长度">
+                    <button id="testBatch" class="batch-btn">测试区间内的所有数字</button>
+                </div>
+                <div id="batchResult" class="result batch-result">
+                    <div class="result-title">测试结果：</div>
+                    <div id="batchResultText"></div>
+                    <div id="batchNumbers"></div>
+                </div>
+            </div>
+            
+            <div class="card" id="tutorialCard">
+                <h3 style="cursor:pointer;user-select:none;" id="tutorialToggle">使用教程 <span id="tutorialArrow"></span></h3>
+                <div id="tutorialContent">
+                    <p><strong>方法一：输入框交互</strong></p>
+                    单个数字测试：在“单个数字测试”区域输入一个正整数，点击“测试是否为质数”按钮，即可查看结果。<br>
+                    批量区间测试：在“批量区间测试”区域输入起始数字、结束数字或区间长度。点击“测试区间内的所有数字”按钮，即可批量检测区间内所有数字的质数情况。<br><br>
+                    <p><strong>方法二：地址栏参数</strong></p>
+                    单个数字测试：在地址栏网址后加入 <code>?mode=single&number=<span class="num">17</span></code> 并回车，页面会查询数字 <span class="num">17</span> 是否为质数。<br>
+                    批量区间测试：在地址栏网址后加入 <code>?mode=range&start=<span class="num">10</span>&end=<span class="num">30</span></code> 并回车，页面会检测区间 [<span class="num">10</span>, <span class="num">30</span>] 内所有数字的质数情况。<br><br>
+                    <p>最多支持 100 个数字批量检测。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 使用BigInt实现幂模运算（快速幂算法）
+        function powerMod(base, exponent, modulus) {
+            if (modulus === 1n) return 0n;
+            let result = 1n;
+            base = base % modulus;
+            
+            while (exponent > 0n) {
+                if (exponent % 2n === 1n) {
+                    result = (result * base) % modulus;
+                }
+                exponent = exponent >> 1n;
+                base = (base * base) % modulus;
+            }
+            return result;
+        }
+        
+        // 米勒-拉宾质数测试函数
+        function isPrime(n) {
+            // 处理小数字的情况
+            if (n <= 1n) return false;
+            if (n === 2n) return true;
+            if (n % 2n === 0n) return false;
+            
+            // 将 n-1 分解为 d * 2^s
+            let d = n - 1n;
+            let s = 0n;
+            while (d % 2n === 0n) {
+                d /= 2n;
+                s++;
+            }
+            
+            // 确定性测试的基数集合（适用于 n < 2^64）
+            const bases = [2n, 325n, 9375n, 28178n, 450775n, 9780504n, 1795265022n];
+            
+            // 对每个基数进行测试
+            for (let a of bases) {
+                if (a >= n) continue;  // 跳过大于等于n的基数
+                
+                let x = powerMod(a, d, n);
+                if (x === 1n || x === n - 1n) continue;
+                
+                let composite = true;
+                // 将s转为Number（因为s通常很小）
+                const sNum = Number(s);
+                
+                for (let i = 1; i < sNum; i++) {
+                    x = powerMod(x, 2n, n);
+                    if (x === n - 1n) {
+                        composite = false;
+                        break;
+                    }
+                }
+                
+                if (composite) return false;
+            }
+            
+            return true;
+        }
+        
+        // 解析URL参数
+        function getUrlParams() {
+            const params = {};
+            const query = window.location.search.substring(1);
+            query.split('&').forEach(function(part) {
+                const item = part.split('=');
+                if (item[0]) {
+                    params[item[0]] = decodeURIComponent(item[1] || '');
+                }
+            });
+            return params;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const singleInput = document.getElementById('singleNumber');
+            const startRangeInput = document.getElementById('startRange');
+            const endRangeInput = document.getElementById('endRange');
+            const intervalLengthInput = document.getElementById('intervalLength');
+            const testSingleBtn = document.getElementById('testSingle');
+            const testBatchBtn = document.getElementById('testBatch');
+            const singleResult = document.getElementById('singleResult');
+            const singleResultText = document.getElementById('singleResultText');
+            const batchResult = document.getElementById('batchResult');
+            const batchResultText = document.getElementById('batchResultText');
+            const batchNumbersContainer = document.getElementById('batchNumbers');
+            // 区间联动逻辑
+            function updateIntervalFromLR() {
+                // l和r都为有效数字时，自动更新区间长度
+                const l = startRangeInput.value.trim();
+                const r = endRangeInput.value.trim();
+                if (/^\d+$/.test(l) && /^\d+$/.test(r)) {
+                    const len = Number(BigInt(r) - BigInt(l) + 1n);
+                    if (len > 0) {
+                        intervalLengthInput.value = len;
+                    } else {
+                        intervalLengthInput.value = '';
+                    }
+                }
+            }
+
+            function updateRFromLAndLen() {
+                // l和区间长度都为有效数字时，自动更新r
+                const l = startRangeInput.value.trim();
+                const len = intervalLengthInput.value.trim();
+                if (/^\d+$/.test(l) && /^\d+$/.test(len)) {
+                    const r = BigInt(l) + BigInt(len) - 1n;
+                    endRangeInput.value = r;
+                }
+            }
+
+            function updateLFromRAndLen() {
+                // r和区间长度都为有效数字时，自动更新l
+                const r = endRangeInput.value.trim();
+                const len = intervalLengthInput.value.trim();
+                if (/^\d+$/.test(r) && /^\d+$/.test(len)) {
+                    const l = BigInt(r) - BigInt(len) + 1n;
+                    startRangeInput.value = l;
+                }
+            }
+
+            // 监听输入变化
+            startRangeInput.addEventListener('input', function() {
+                // 如果len有值，则优先用l和len推算r，否则用l和r推算len
+                const len = intervalLengthInput.value.trim();
+                if (/^\d+$/.test(len)) {
+                    updateRFromLAndLen();
+                } else {
+                    updateIntervalFromLR();
+                }
+            });
+            endRangeInput.addEventListener('input', function() {
+                // 如果len有值，则优先用r和len推算l，否则用l和r推算len
+                const len = intervalLengthInput.value.trim();
+                if (/^\d+$/.test(len)) {
+                    updateLFromRAndLen();
+                } else {
+                    updateIntervalFromLR();
+                }
+            });
+            intervalLengthInput.addEventListener('input', function(e) {
+                // len变化时，优先用l推r，否则用r推l
+                const l = startRangeInput.value.trim();
+                const r = endRangeInput.value.trim();
+                const len = intervalLengthInput.value.trim();
+                if (/^\d+$/.test(len)) {
+                    if (/^\d+$/.test(l)) {
+                        updateRFromLAndLen();
+                    } else if (/^\d+$/.test(r)) {
+                        updateLFromRAndLen();
+                    }
+                }
+            });
+            
+            // 单个数字测试
+            testSingleBtn.addEventListener('click', function() {
+                const input = singleInput.value.trim();
+                if (!input) {
+                    alert('请输入一个数字');
+                    return;
+                }
+                if (!/^\d+$/.test(input)) {
+                    alert('请输入有效的正整数');
+                    return;
+                }
+                try {
+                    const n = BigInt(input);
+                    let resultText = '';
+                    if (n === 0n || n === 1n) {
+                        resultText = `<span style="color:#888">${input} 既不是质数也不是合数</span>`;
+                    } else {
+                        const result = isPrime(n);
+                        resultText = `<span class="${result ? 'prime' : 'composite'}">${input} ${result ? '是' : '不是'}质数</span>`;
+                    }
+                    singleResultText.innerHTML = resultText;
+                    singleResult.style.display = 'block';
+                } catch (error) {
+                    alert('输入的数字太大，请尝试小一点的数字');
+                }
+            });
+            
+            // 批量区间测试
+            testBatchBtn.addEventListener('click', function() {
+                const start = startRangeInput.value.trim();
+                const end = endRangeInput.value.trim();
+                if (!start || !end) {
+                    alert('请输入起始和结束数字');
+                    return;
+                }
+                if (!/^\d+$/.test(start) || !/^\d+$/.test(end)) {
+                    alert('请输入有效的正整数');
+                    return;
+                }
+                try {
+                    let l = BigInt(start);
+                    let r = BigInt(end);
+                    if (l > r) {
+                        l^=r,r^=l,l^=r;
+                        alert('起始数字不能大于结束数字，已自动交换l，r');
+                    }
+                    let count = Number(r - l + 1n);
+                    if (count > 100) {
+                        r=l+99n;
+                        alert('批量测试最多支持100个数字，已自动减小r');
+                    }
+                    if (count <= 0) {
+                        alert('区间无效');
+                        return;
+                    }
+                    count = Number(r - l + 1n);
+                    startRangeInput.value=l;
+                    endRangeInput.value=r;
+                    intervalLengthInput.value = count;
+                    // 测试区间内的所有数字
+                    const results = [];
+                    for (let i = l; i <= r; i++) {
+                        let isPrimeResult = null;
+                        if (i === 0n || i === 1n) {
+                            isPrimeResult = null;
+                        } else {
+                            isPrimeResult = isPrime(i);
+                        }
+                        results.push({
+                            number: i,
+                            isPrime: isPrimeResult
+                        });
+                    }
+                    // 统计结果
+                    const primeCount = results.filter(r => r.isPrime === true).length;
+                    const neitherCount = results.filter(r => r.isPrime === null).length;
+                    batchResultText.innerHTML = `区间 <strong>[${l}, ${r}]</strong> 共有 <strong>${count}</strong> 个数字，其中 <span class="prime">${primeCount} 个质数</span>，<span class="composite">${count - primeCount - neitherCount} 个合数</span>${neitherCount > 0 ? `，<span style='color:#888'>${neitherCount} 个既不是质数也不是合数</span>` : ''}`;
+                    // 显示所有数字的结果
+                    batchNumbersContainer.innerHTML = '';
+                    results.forEach(result => {
+                        const numCard = document.createElement('div');
+                        let cardClass = '';
+                        let statusText = '';
+                        if (result.isPrime === null) {
+                            cardClass = '';
+                            statusText = '都不是';
+                        } else {
+                            cardClass = result.isPrime ? 'prime' : 'composite';
+                            statusText = result.isPrime ? '质数' : '合数';
+                        }
+                        numCard.className = `number-card ${cardClass}`;
+                        numCard.innerHTML = `
+                            <div class="number">${result.number}</div>
+                            <div class="status">${statusText}</div>
+                        `;
+                        batchNumbersContainer.appendChild(numCard);
+                    });
+                    batchResult.style.display = 'block';
+                } catch (error) {
+                    alert('异常：'+error);
+                }
+            });
+            
+            // 输入验证（只允许输入数字）
+            const inputs = [singleInput, startRangeInput, endRangeInput, intervalLengthInput];
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^\d]/g, '');
+                });
+            });
+            
+            // 读取参数并自动填充
+            const urlParams = getUrlParams();
+            if (urlParams.mode === 'range') {
+                if (urlParams.start && /^\d+$/.test(urlParams.start)) {
+                    startRangeInput.value = urlParams.start;
+                }
+                if (urlParams.end && /^\d+$/.test(urlParams.end)) {
+                    endRangeInput.value = urlParams.end;
+                }
+                // 自动触发区间联动逻辑
+                startRangeInput.dispatchEvent(new Event('input'));
+                endRangeInput.dispatchEvent(new Event('input'));
+                // 自动点击批量查询按钮
+                testBatchBtn.click();
+            } else if (urlParams.mode === 'single') {
+                if (urlParams.number && /^\d+$/.test(urlParams.number)) {
+                    singleInput.value = urlParams.number;
+                    testSingleBtn.click();
+                }
+            }
+            // 教程展开/折叠功能（带本地记忆）
+            const tutorialToggle = document.getElementById('tutorialToggle');
+            const tutorialContent = document.getElementById('tutorialContent');
+            const tutorialArrow = document.getElementById('tutorialArrow');
+            // 读取本地存储
+            let tutorialVisible = localStorage.getItem('tutorialVisible');
+            if (tutorialVisible === null) tutorialVisible = 'true';
+            tutorialVisible = tutorialVisible === 'true';
+            function setTutorialState(visible) {
+                tutorialContent.style.display = visible ? '' : 'none';
+                tutorialArrow.textContent = visible ? '(点击折叠)' : '(点击展开)';
+                localStorage.setItem('tutorialVisible', visible ? 'true' : 'false');
+            }
+            tutorialToggle.addEventListener('click', function() {
+                tutorialVisible = !tutorialVisible;
+                setTutorialState(tutorialVisible);
+            });
+            // 初始化显示状态
+            setTutorialState(tutorialVisible);
+        });
+    </script>
+</body>
+</html>
